@@ -59,6 +59,7 @@ const Login = () => {
                     required
                 />
                 <button type="submit" className='p-1 rounded-md text-white bg-yellow-400'>{isSignUp ? 'Sign Up' : 'Login'}</button>
+                <p className='text-xs text-center'>If you can't login it means your password or email is wrong? retry...</p>
                 <button onClick={() => setIsSignUp(!isSignUp)} className='text-sm underline text-yellow-400'>
                     Switch to {isSignUp ? 'Login' : 'Sign Up'}
                 </button>
