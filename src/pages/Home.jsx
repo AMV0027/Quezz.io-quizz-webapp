@@ -1,17 +1,16 @@
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { FaHome, FaInfoCircle } from "react-icons/fa";
-import { FaNotesMedical } from "react-icons/fa6";
-import { MdSportsScore } from "react-icons/md";
+import { FaEye, FaHome, FaInfoCircle } from "react-icons/fa";
+import { FaDeleteLeft, FaNotesMedical } from "react-icons/fa6";
 import { SiGoogleclassroom } from "react-icons/si";
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { useAuth } from '../config/AuthContext'; // Assuming you have an AuthContext
+import { useAuth } from '../config/AuthContext';
 import { db } from '../config/firebase';
 import Scoreboard from './Scoreboard';
 
 const Home = () => {
-    const { user } = useAuth(); // Get current user from AuthContext
+    const { user } = useAuth();
     const [quizzes, setQuizzes] = useState([]);
     const [scoreboardData, setScoreboardData] = useState(null);
     const [isScoreboardOpen, setIsScoreboardOpen] = useState(false);
@@ -22,7 +21,7 @@ const Home = () => {
         const fetchQuizzes = async () => {
             if (user) {
                 const quizCollection = collection(db, 'quizzes');
-                const userQuizzesQuery = query(quizCollection, where('createdBy', '==', user.uid)); // Filter by current user ID
+                const userQuizzesQuery = query(quizCollection, where('createdBy', '==', user.uid));
                 const quizSnapshot = await getDocs(userQuizzesQuery);
                 const quizList = quizSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setQuizzes(quizList);
@@ -35,11 +34,22 @@ const Home = () => {
     const handleScoreboardClick = async (quizId) => {
         setSelectedQuizId(quizId);
         setIsScoreboardOpen(true);
-        // Fetch scoreboard data based on the quizId
     };
 
     const closeScoreboard = () => {
         setIsScoreboardOpen(false);
+    };
+
+    const handleDeleteQuiz = async (quizId) => {
+        const quizDocRef = doc(db, 'quizzes', quizId);
+        try {
+            await deleteDoc(quizDocRef);
+            setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizId));
+            alert("Quiz deleted successfully.");
+        } catch (error) {
+            console.error("Error deleting quiz: ", error);
+            alert("Failed to delete quiz. Please try again.");
+        }
     };
 
     return (
@@ -70,22 +80,45 @@ const Home = () => {
                 </button>
             </div>
             <h2 className='text-xl font-semibold mt-6'>Your Created Quizzes</h2>
-            <ul className='border-2 w-[95vw] p-2 flex flex-col gap-2'>
-                {quizzes.length == 0 ?
-                    (<p className='text-sm text-center text-yellow-500'>No quizzes found. Create some quizzes to see them here.</p>)
-                    :
-                    quizzes.map((quiz) => (
-                        <li key={quiz.id} className="flex justify-between items-center bg-zinc-200 rounded p-1 pl-4">
-                            <span>{quiz.quizName} -  [ ID: {quiz.id} ]</span>
-                            <button
-                                onClick={() => handleScoreboardClick(quiz.id)}
-                                className="ml-4 bg-yellow-400 text-white p-2 rounded flex flex-row items-center gap-2"
-                            >
-                                Scoreboard <MdSportsScore className='text-2xl' />
-                            </button>
-                        </li>
-                    ))}
-            </ul>
+            <div className='w-[95vw] p-2 text-sm md:text-md'>
+                {quizzes.length === 0 ? (
+                    <p className='text-sm text-center text-yellow-500'>
+                        No quizzes found. Create some quizzes to see them here.
+                    </p>
+                ) : (
+                    <table className='w-full border-collapse'>
+                        <thead>
+                            <tr className='bg-yellow-400 text-white'>
+                                <th className='p-2 border'>Quiz Name</th>
+                                <th className='p-2 border'>Quiz ID</th>
+                                <th className='p-2 border'>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {quizzes.map((quiz) => (
+                                <tr key={quiz.id} className='bg-zinc-200'>
+                                    <td className='p-2 border text-left'>{quiz.quizName}</td>
+                                    <td className='p-2 border text-center bg-yellow-100'>{quiz.id}</td>
+                                    <td className='p-2 border text-center flex flex-row justify-center items-center'>
+                                        <button
+                                            onClick={() => handleScoreboardClick(quiz.id)}
+                                            className="bg-yellow-400 text-white p-2 rounded flex flex-row items-center gap-2 mr-2"
+                                        >
+                                            Score <FaEye />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteQuiz(quiz.id)}
+                                            className="bg-red-500 text-white p-2 rounded"
+                                        >
+                                            <FaDeleteLeft />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
 
             {/* Scoreboard Popup */}
             {isScoreboardOpen && (
