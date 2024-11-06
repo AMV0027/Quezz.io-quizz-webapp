@@ -119,11 +119,13 @@ const JoinQuiz = () => {
                     <button onClick={handleSubmit} className='mt-2 bg-green-700 text-white p-2 w-full rounded-xl mb-5'>Submit Answers</button>
                 </div>
             )}
-            {submitted && (
-                <div className='mb-5'>
-                    <h2>Your Score: {score} ✨</h2>
-                </div>
-            )}
+            {submitted &&
+                alert("Your score : ", score)
+                    (
+                        <div className='mb-5 flex flex-row justify-center'>
+                            <h4>Your Score 🏆 : {score}</h4>
+                        </div>
+                    )}
         </div>
     );
 };
